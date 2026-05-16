@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+data/raw/
+data/processed/
+models/saved/
+*.csv
+*.zip
+.DS_Store

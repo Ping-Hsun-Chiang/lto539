@@ -40,7 +40,7 @@ def get_history():
 @st.cache_data(show_spinner="計算預測分數...")
 def get_scores(last_period: int):
     history = get_history()
-    model = EnsembleModel()
+    model = EnsembleModel(use_lstm=False)  # rule-based only for web (no torch needed)
     model.fit(history)
     scores = model.predict_proba(history)
     top5 = model.top5(history)

@@ -1,24 +1,32 @@
 import numpy as np
 
-from src.models.lstm_model import LSTMModel
 from src.models.rule_based import RuleBasedModel
 
-# weight: rule-based gets 0.4, LSTM gets 0.6
 WEIGHTS = {"rule": 0.4, "lstm": 0.6}
 
 
 class EnsembleModel:
-    def __init__(self):
+    def __init__(self, use_lstm: bool = True):
         self.rule = RuleBasedModel()
-        self.lstm = LSTMModel()
+        self.lstm = None
+        if use_lstm:
+            try:
+                from src.models.lstm_model import LSTMModel
+                self.lstm = LSTMModel()
+            except ImportError:
+                pass  # torch not available, fall back to rule-based only
 
     def fit(self, history: list[dict]) -> None:
-        self.lstm.fit(history)
+        if self.lstm is not None:
+            self.lstm.fit(history)
 
     def predict_proba(self, history: list[dict]) -> np.ndarray:
         rule_s = self.rule.predict_proba(history)
-        lstm_s = self.lstm.predict_proba(history)
-        combined = WEIGHTS["rule"] * rule_s + WEIGHTS["lstm"] * lstm_s
+        if self.lstm is not None:
+            lstm_s = self.lstm.predict_proba(history)
+            combined = WEIGHTS["rule"] * rule_s + WEIGHTS["lstm"] * lstm_s
+        else:
+            combined = rule_s
         return combined / (combined.sum() + 1e-9)
 
     def top5(self, history: list[dict]) -> list[int]:

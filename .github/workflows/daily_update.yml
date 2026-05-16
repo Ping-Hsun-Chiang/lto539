@@ -1,0 +1,42 @@
+name: Daily Lottery Update
+
+on:
+  schedule:
+    # 23:30 Taiwan time (UTC+8) = 15:30 UTC, Mon–Sat
+    - cron: "30 15 * * 1-6"
+  workflow_dispatch:  # allow manual trigger from GitHub UI
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements-cloud.txt
+
+      - name: Fetch latest lottery data
+        run: python cli/main.py collect --years 2
+
+      - name: Check for new data
+        id: check
+        run: |
+          git diff --quiet data/raw/history.csv && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and push if updated
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/raw/history.csv
+          git commit -m "[CHORE] Auto-update lottery history $(date +'%Y-%m-%d')"
+          git push

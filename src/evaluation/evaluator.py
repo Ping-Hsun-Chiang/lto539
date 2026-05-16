@@ -17,7 +17,7 @@ def print_report(results: list[dict]) -> None:
         count = summary[hits]["count"]
         pct = summary[hits]["pct"]
         bar_len = int(bar_max * pct / max_pct)
-        bar = "█" * bar_len
+        bar = "#" * bar_len
         print(f"  {hits} hit(s): {bar:<{bar_max}} {count:>5} draws ({pct:5.1f}%)")
 
     print("=" * 50)

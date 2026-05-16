@@ -1,9 +1,14 @@
 import csv
 import os
 import time
+import warnings
 from datetime import datetime, timedelta
 
 import requests
+import urllib3
+
+# Taiwan Lottery API certificate missing Subject Key Identifier (Python 3.14 strict SSL)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://api.taiwanlottery.com/TLCAPIWeB/Lottery/Daily539Result"
 RAW_PATH = os.path.join(os.path.dirname(__file__), "../../data/raw/history.csv")
@@ -13,7 +18,7 @@ FIELDNAMES = ["period", "date", "weekday", "n1", "n2", "n3", "n4", "n5"]
 def _fetch_month(year: int, month: int) -> list[dict]:
     url = f"{BASE_URL}?period&month={year}-{month:02d}&pageSize=31"
     try:
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, timeout=10, verify=False)
         resp.raise_for_status()
         data = resp.json()
         results = data["content"]["daily539Res"]
